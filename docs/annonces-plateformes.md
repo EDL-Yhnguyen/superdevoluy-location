@@ -1,4 +1,4 @@
-# Textes d'annonce — Studio SuperDévoluy (n° 347 N)
+# Textes d'annonce — Studio SuperDévoluy, Le Bois d'Aurouze, 3e étage (n° 347 N)
 
 À coller tel quel dans Airbnb, Booking.com, Abritel et Leboncoin. Les crochets restent à compléter.
 
@@ -15,7 +15,7 @@ Studio lumineux pour 5 au cœur de SuperDévoluy : balcon vue montagne, kitchene
 ## Description complète
 
 **Le logement**
-Grand séjour carrelé ouvert sur le balcon plein sud, avec table pour 4, télévision et grande armoire. Coin nuit avec lit mezzanine 1 personne et clic-clac 2 personnes dessous, plus une banquette convertible 2 personnes dans le séjour : 5 couchages, couettes et oreillers fournis. Kitchenette séparée : plaques, réfrigérateur-congélateur, micro-ondes, vaisselle pour 6. Salle d'eau avec douche, lavabo et WC. Chauffage électrique, étendoir, [casier à skis].
+Résidence Le Bois d'Aurouze, 3e étage, à deux pas du télésiège du Jas. Grand séjour carrelé ouvert sur le balcon plein sud, avec table pour 4, télévision et grande armoire. Coin nuit avec lit mezzanine 1 personne et clic-clac 2 personnes dessous, plus une banquette convertible 2 personnes dans le séjour : 5 couchages, couettes et oreillers fournis. Kitchenette séparée : plaques, réfrigérateur-congélateur, micro-ondes, vaisselle pour 6. Salle d'eau avec douche, lavabo et WC. Chauffage électrique, étendoir, [casier à skis].
 
 **La station**
 SuperDévoluy se fait à pied : remontées, école de ski, location de matériel, boulangerie, supérette et restaurants à quelques minutes du studio. Domaine du Dévoluy : 100 km de pistes de 1 500 à 2 500 m, forfait adulte 44 € la journée et 220 € les 6 jours (saison 2025-2026). L'été : randonnée vers le Pic de Bure, VTT de descente, via ferrata, lac du Sautet.
