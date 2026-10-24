@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://edl-yhnguyen.github.io/superdevoluy-location/sitemap.xml
