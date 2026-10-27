@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { devis, chevauche, fmt } from "../lib/pricing";
-import { LOGEMENT } from "../lib/config";
+import { LOGEMENT, PROPRIETAIRE } from "../lib/config";
 
 const MS_JOUR = 86400000;
 
@@ -40,17 +40,19 @@ function Calendrier({ blocs }) {
         ))}
       </div>
       <div className="legend">
-        <span><i style={{ background: "#e3efe7" }} />Libre</span>
-        <span><i style={{ background: "#e8d7d3" }} />Occupé</span>
+        <span><i style={{ background: "rgba(255,255,255,.15)" }} />Libre</span>
+        <span><i style={{ background: "rgba(200,57,43,.6)" }} />Occupé</span>
       </div>
     </div>
   );
 }
 
-export default function Reservation() {
+// paiementActif : Stripe configuré côté serveur. Sinon la demande part par e-mail.
+export default function Reservation({ paiementActif = false }) {
   const [blocs, setBlocs] = useState([]);
-  const [f, setF] = useState({ arrivee: "", depart: "", adultes: 2, enfants: 0, nom: "", email: "", telephone: "", cgv: false });
+  const [f, setF] = useState({ arrivee: "", depart: "", adultes: 2, enfants: 0, nom: "", email: "", telephone: "", message: "", cgv: false });
   const [err, setErr] = useState("");
+  const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -62,13 +64,21 @@ export default function Reservation() {
   const conflit = f.arrivee && f.depart && chevauche(f.arrivee, f.depart, blocs);
   const today = fmt(new Date());
   const minDepart = f.arrivee ? fmt(new Date(new Date(f.arrivee + "T00:00:00Z").getTime() + MS_JOUR)) : today;
+  const pret = q && !q.erreur && !conflit;
 
-  async function payer(e) {
+  function demanderParMail() {
+    const body = `Demande de réservation — Studio Bois d'Aurouze, SuperDévoluy\n\nArrivée : ${f.arrivee}\nDépart : ${f.depart}\nAdultes : ${f.adultes} · Enfants : ${f.enfants}\nNom : ${f.nom}\nE-mail : ${f.email}\nTéléphone : ${f.telephone}\n\nDevis : ${q.nuits} nuits, total ${q.total} €, acompte ${q.acompte} €\n\n${f.message}`;
+    window.location.href = `mailto:${PROPRIETAIRE.email}?subject=${encodeURIComponent(`Réservation studio SuperDévoluy ${f.arrivee} → ${f.depart}`)}&body=${encodeURIComponent(body)}`;
+    setInfo(`Votre messagerie s'ouvre avec la demande pré-remplie. Si rien ne s'ouvre, écrivez à ${PROPRIETAIRE.email}`);
+  }
+
+  async function envoyer(e) {
     e.preventDefault();
-    setErr("");
-    if (!q || q.erreur) return setErr(q?.erreur || "Choisis tes dates");
+    setErr(""); setInfo("");
+    if (!q || q.erreur) return setErr(q?.erreur || "Choisissez vos dates");
     if (conflit) return setErr("Ces dates sont déjà réservées");
     if (!f.cgv) return setErr("Il faut accepter les conditions générales");
+    if (!paiementActif) return demanderParMail();
     setBusy(true);
     try {
       const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
@@ -81,12 +91,15 @@ export default function Reservation() {
     }
   }
 
+  const libelle = busy ? "Redirection…"
+    : !pret ? "Choisissez vos dates"
+    : paiementActif ? `Payer ${q.acompte} € par carte`
+    : `Demander ces dates — ${q.total} € tout compris`;
+
   return (
-    <div className="grid" style={{ gridTemplateColumns: "2fr 1fr" }}>
-      <div>
-        <Calendrier blocs={blocs} />
-      </div>
-      <form onSubmit={payer} className="card">
+    <div className="two">
+      <Calendrier blocs={blocs} />
+      <form onSubmit={envoyer} className="card">
         <div className="row">
           <label>Arrivée<input type="date" required min={today} value={f.arrivee} onChange={set("arrivee")} /></label>
           <label>Départ<input type="date" required min={minDepart} value={f.depart} onChange={set("depart")} /></label>
@@ -95,9 +108,12 @@ export default function Reservation() {
           <label>Adultes<input type="number" min="1" max={LOGEMENT.capacite} value={f.adultes} onChange={set("adultes")} /></label>
           <label>Enfants<input type="number" min="0" max={LOGEMENT.capacite - 1} value={f.enfants} onChange={set("enfants")} /></label>
         </div>
-        <label>Nom et prénom<input required value={f.nom} onChange={set("nom")} /></label>
-        <label>E-mail<input type="email" required value={f.email} onChange={set("email")} /></label>
-        <label>Téléphone<input type="tel" value={f.telephone} onChange={set("telephone")} /></label>
+        <div className="row">
+          <label>Nom et prénom<input required autoComplete="name" value={f.nom} onChange={set("nom")} /></label>
+          <label>E-mail<input type="email" required autoComplete="email" value={f.email} onChange={set("email")} /></label>
+        </div>
+        <label>Téléphone (facultatif)<input type="tel" autoComplete="tel" value={f.telephone} onChange={set("telephone")} /></label>
+        <label>Un mot ? (linge, arrivée tardive, question)<textarea rows="2" value={f.message} onChange={set("message")} /></label>
 
         {q && !q.erreur && (
           <div className="devis">
@@ -106,7 +122,7 @@ export default function Reservation() {
               <dt>Ménage</dt><dd>{q.menage} €</dd>
               <dt>Taxe de séjour</dt><dd>{q.taxe} €</dd>
               <dt className="total">Total</dt><dd className="total">{q.total} €</dd>
-              <dt>À payer maintenant</dt><dd>{q.acompte} €</dd>
+              <dt>{paiementActif ? "À payer maintenant" : "Acompte à la réservation"}</dt><dd>{q.acompte} €</dd>
               {q.solde > 0 && <><dt>Solde 30 j avant l'arrivée</dt><dd>{q.solde} €</dd></>}
               <dt>Caution à l'arrivée</dt><dd>{q.caution} €</dd>
             </dl>
@@ -114,16 +130,15 @@ export default function Reservation() {
         )}
         {q?.erreur && <p className="err">{q.erreur}</p>}
         {conflit && <p className="err">Ces dates sont déjà réservées.</p>}
-        {q && !q.erreur && !conflit && <p className="ok">Dates disponibles.</p>}
+        {pret && <p className="ok">Dates disponibles.</p>}
 
         <label style={{ gridTemplateColumns: "auto 1fr", alignItems: "start", fontWeight: 400 }}>
           <input type="checkbox" checked={f.cgv} onChange={set("cgv")} />
           <span>J'accepte les <a href="/documents#cgv" target="_blank">conditions générales</a> et le <a href="/documents#reglement" target="_blank">règlement intérieur</a>.</span>
         </label>
         {err && <p className="err">{err}</p>}
-        <button className="btn" disabled={busy || !q || !!q.erreur || conflit}>
-          {busy ? "Redirection…" : q && !q.erreur ? `Payer ${q.acompte} € par carte` : "Choisir des dates"}
-        </button>
+        {info && <p className="ok">{info}</p>}
+        <button className="btn" disabled={busy || !pret}>{libelle}</button>
       </form>
     </div>
   );
